@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="vi" class="h-full bg-slate-950">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GaraTech Pro Enterprise - Hệ Thống ERP Quản Lý Gara Ô Tô Toàn Diện</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js CDN for Analytics -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Google Fonts & Font Awesome Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0f9ff',
+              100: '#e0f2fe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#082f49',
+              950: '#031726'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Tùy chỉnh thanh cuộn đẹp mắt */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: #090d16; }
+    ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #334155; }
+
+    /* Print Template */
+    @media print {
+      body * { visibility: hidden; }
+      #printInvoiceArea, #printInvoiceArea * { visibility: visible; }
+      #printInvoiceArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 20px;
+        background: white !important;
+        color: black !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="h-full text-slate-100 flex overflow-hidden font-sans antialiased bg-slate-950">
+
+  <!-- ============================================================== -->
+  <!-- 1. SIDEBAR NAVIGATION TOÀN DIỆN (9 PHÂN HỆ)                    -->
+  <!-- ============================================================== -->
+  <aside id="sidebar" class="w-64 bg-slate-900/95 border-r border-slate-800 flex flex-col justify-between shrink-0 transition-all duration-300 z-30">
+    <div class="flex flex-col h-full overflow-hidden">
+      <!-- Logo Header -->
+      <div class="h-16 flex items-center px-5 border-b border-slate-800 gap-3 shrink-0">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-blue-600 to-cyan-400 flex items-center justify-center text-white shadow-lg shadow-sky-500/20">
+          <i class="fa-solid fa-car-tunnel text-lg"></i>
+        </div>
+        <div>
+          <div class="font-extrabold text-sm tracking-tight text-white flex items-center gap-1.5">
+            GARATECH <span class="text-[10px] bg-sky-500/20 text-sky-400 px-1.5 py-0.5 rounded font-mono font-bold">ENTERPRISE</span>
+          </div>
+          <p class="text-[10px] text-slate-400">Xưởng Dịch Vụ Ô Tô Chuẩn 4S</p>
+        </div>
+      </div>
+
+      <!-- User Role Simulation Switcher -->
+      <div class="p-3 mx-3 my-2.5 bg-slate-950/80 rounded-2xl border border-slate-800/80 shrink-0">
+        <div class="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+          <span class="flex items-center gap-1.5 font-medium"><i class="fa-solid fa-user-shield text-sky-400"></i> Vai trò thao tác:</span>
+        </div>
+        <select id="roleSelector" onchange="switchRole(this.value)" class="w-full bg-slate-900 text-sky-400 text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-700 outline-none focus:border-sky-500 cursor-pointer">
+          <option value="advisor">Cố vấn Dịch vụ (Service Advisor)</option>
+          <option value="foreman">Quản đốc Xưởng (Workshop Foreman)</option>
+          <option value="accountant">Kế toán & Thu ngân (Cashier)</option>
+          <option value="manager">Giám đốc Điều hành (General Manager)</option>
+        </select>
+      </div>
+
+      <!-- Navigation List (Scrollable) -->
+      <nav class="flex-1 overflow-y-auto px-3 space-y-1 text-xs font-medium py-2">
+        <div class="text-[10px] font-bold text-slate-500 px-3 py-1 uppercase tracking-wider">Vận Hành Chính</div>
+        
+        <button onclick="navigateTab('dashboard')" id="nav-dashboard" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sky-400 bg-sky-950/50 border border-sky-800/40 transition-all">
+          <i class="fa-solid fa-chart-line w-4 text-center"></i>
+          <span>Dashboard Điều Hành</span>
+        </button>
+
+        <button onclick="navigateTab('repair-orders')" id="nav-repair-orders" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-file-invoice-dollar w-4 text-center"></i>
+          <span>Lệnh Sửa Chữa (RO)</span>
+          <span id="badgeActiveRO" class="ml-auto text-[10px] font-bold bg-sky-600 text-white px-2 py-0.5 rounded-full">5</span>
+        </button>
+
+        <button onclick="navigateTab('kanban')" id="nav-kanban" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-table-columns w-4 text-center"></i>
+          <span>Tiến Độ Xưởng (Kanban)</span>
+          <span class="w-2 h-2 rounded-full bg-emerald-400 ml-auto animate-ping"></span>
+        </button>
+
+        <div class="text-[10px] font-bold text-slate-500 px-3 pt-3 pb-1 uppercase tracking-wider">Quản Trị Nguồn Lực</div>
+
+        <button onclick="navigateTab('inventory')" id="nav-inventory" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-boxes-stacked w-4 text-center"></i>
+          <span>Kho Phụ Tùng & Vật Tư</span>
+          <span id="badgeLowStock" class="ml-auto text-[10px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30 px-2 py-0.5 rounded-full">3</span>
+        </button>
+
+        <button onclick="navigateTab('customers')" id="nav-customers" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-address-book w-4 text-center"></i>
+          <span>Khách Hàng & Hồ Sơ Xe</span>
+        </button>
+
+        <button onclick="navigateTab('technicians')" id="nav-technicians" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-users-gear w-4 text-center"></i>
+          <span>Kỹ Thuật Viên & Hoa Hồng</span>
+        </button>
+
+        <div class="text-[10px] font-bold text-slate-500 px-3 pt-3 pb-1 uppercase tracking-wider">Tài Chính & Hệ Thống</div>
+
+        <button onclick="navigateTab('finance')" id="nav-finance" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-calculator w-4 text-center"></i>
+          <span>Kế Toán & Thu Chi</span>
+        </button>
+
+        <button onclick="navigateTab('reports')" id="nav-reports" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-chart-pie w-4 text-center"></i>
+          <span>Báo Cáo KPI & Doanh Số</span>
+        </button>
+
+        <button onclick="navigateTab('settings')" id="nav-settings" class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition-all">
+          <i class="fa-solid fa-sliders w-4 text-center"></i>
+          <span>Cấu Hình Xưởng Gara</span>
+        </button>
+      </nav>
+
+      <!-- Bottom Branch Info -->
+      <div class="p-3.5 border-t border-slate-800 bg-slate-950/90 text-xs text-slate-400 shrink-0">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span class="text-white font-medium text-[11px]">Chi nhánh 01 - Đà Nẵng</span>
+          </div>
+          <span class="text-[10px] font-mono text-slate-500">v3.5 PRO</span>
+        </div>
+        <p class="text-[10px] text-slate-500 mt-1">Cầu nâng: 6/8 Đang phục vụ</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============================================================== -->
+  <!-- 2. MAIN VIEWPORT & HEADER                                      -->
+  <!-- ============================================================== -->
+  <div class="flex-1 flex flex-col h-full overflow-hidden">
+    
+    <!-- Top Header Bar -->
+    <header class="h-16 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 flex items-center justify-between px-6 z-20 shrink-0">
+      <div class="flex items-center gap-4">
+        <button onclick="toggleSidebar()" class="text-slate-400 hover:text-white lg:hidden">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div>
+          <h2 id="pageTitle" class="text-base font-bold text-white tracking-tight flex items-center gap-2">
+            Tổng Quan Điều Hành Xưởng Dịch Vụ
+          </h2>
+          <p id="pageSubtitle" class="text-[11px] text-slate-400">Dữ liệu thời gian thực cập nhật ngày hôm nay</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- Quick Action: Nhận xe mới -->
+        <button onclick="openNewROModal()" class="px-3.5 py-2 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-sky-500/20 active:scale-95 transition-all">
+          <i class="fa-solid fa-plus-circle"></i>
+          <span>Tiếp Nhận Xe Mới</span>
+        </button>
+
+        <!-- Current User Profile Avatar -->
+        <div class="flex items-center gap-2.5 pl-3 border-l border-slate-800">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+            AD
+          </div>
+          <div class="hidden sm:block text-left text-xs">
+            <div class="font-bold text-slate-200">Anh Duy (Trưởng Xưởng)</div>
+            <div id="userRoleBadge" class="text-[10px] text-sky-400 font-mono">Service Advisor</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Viewport Scrollable -->
+    <main class="flex-1 overflow-y-auto p-5 sm:p-6 space-y-6">
+
+      <!-- ============================================================== -->
+      <!-- TAB 1: DASHBOARD ANALYTICS ĐA CHIỀU                           -->
+      <!-- ============================================================== -->
+      <section id="tab-dashboard" class="tab-content space-y-6">
+        <!-- Metric Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-sky-500/40 transition-all">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-[11px] font-semibold uppercase tracking-wider">Xe Đang Tại Xưởng</span>
+              <div class="w-8 h-8 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center">
+                <i class="fa-solid fa-car-side"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold font-mono text-white" id="statCarsInGarage">5 xe</div>
+            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1 font-medium">
+              <i class="fa-solid fa-arrow-trend-up"></i>
+              <span>3 xe đã duyệt báo giá đang làm</span>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-emerald-500/40 transition-all">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-[11px] font-semibold uppercase tracking-wider">Doanh Thu Hôm Nay</span>
+              <div class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center">
+                <i class="fa-solid fa-money-bill-trend-up"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold font-mono text-emerald-400" id="statRevenueToday">24.850.000 đ</div>
+            <div class="text-[11px] text-slate-400 mt-1">Đã bao gồm VAT & công thợ</div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-rose-500/40 transition-all">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-[11px] font-semibold uppercase tracking-wider">Cảnh Báo Kho Vật Tư</span>
+              <div class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold font-mono text-rose-400" id="statLowStockCount">3 mặt hàng</div>
+            <div class="text-[11px] text-rose-400/80 mt-1">Má phanh CR-V, Nhớt 0W-20 dưới định mức</div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 hover:border-amber-500/40 transition-all">
+            <div class="flex items-center justify-between text-slate-400 mb-2">
+              <span class="text-[11px] font-semibold uppercase tracking-wider">Hiệu Suất Đúng Hẹn</span>
+              <div class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
+                <i class="fa-solid fa-stopwatch-20"></i>
+              </div>
+            </div>
+            <div class="text-2xl font-bold font-mono text-white">96.2%</div>
+            <div class="text-[11px] text-emerald-400 mt-1 flex items-center gap-1">
+              <i class="fa-solid fa-circle-check"></i> Đạt chuẩn chất lượng 5 sao
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts: 12 Months Analytics & Revenue Structure -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+          <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5">
+            <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-4">
+              <div>
+                <h3 class="font-bold text-white text-sm">Biểu Đồ Doanh Thu Dịch Vụ Theo Tháng (2026)</h3>
+                <p class="text-xs text-slate-400">Doanh số phụ tùng thay thế và tiền công dịch vụ kỹ thuật</p>
+              </div>
+              <span class="text-xs font-mono text-sky-400 bg-sky-950/60 px-2.5 py-1 rounded border border-sky-800">Đơn vị: Triệu VNĐ</span>
+            </div>
+            <div class="h-64 sm:h-72">
+              <canvas id="annualRevenueChart"></canvas>
+            </div>
+          </div>
+
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col justify-between">
+            <div>
+              <h3 class="font-bold text-white text-sm mb-1">Cơ Cấu Doanh Thu Gara</h3>
+              <p class="text-xs text-slate-400 mb-4">Tỷ trọng đóng góp từ các mảng</p>
+              <div class="h-48 relative flex items-center justify-center">
+                <canvas id="revenuePieChart"></canvas>
+              </div>
+            </div>
+            <div class="space-y-2 text-xs pt-3 border-t border-slate-800 text-slate-300">
+              <div class="flex justify-between items-center"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-500"></span> Phụ tùng chính hãng:</span> <b>54%</b></div>
+              <div class="flex justify-between items-center"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Tiền công thợ:</span> <b>32%</b></div>
+              <div class="flex justify-between items-center"><span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Chăm sóc xe & Detailing:</span> <b>14%</b></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Live Action Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-white text-sm">Xe Đang Chờ Nghiệm Thu & Giao Khách Trong Ngày</h3>
+              <p class="text-xs text-slate-400">Các xe đã hoàn thành xong khâu kỹ thuật chuẩn bị bàn giao</p>
+            </div>
+            <button onclick="navigateTab('kanban')" class="text-xs text-sky-400 hover:text-sky-300 font-semibold flex items-center gap-1">
+              Xem tiến độ Xưởng <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3">Mã RO</th>
+                  <th class="p-3">Biển Số / Xe</th>
+                  <th class="p-3">Chủ Phương Tiện</th>
+                  <th class="p-3">KTV Phụ Trách</th>
+                  <th class="p-3">Hạng Mục Chính</th>
+                  <th class="p-3">Trạng Thái</th>
+                  <th class="p-3 text-right">Tổng Tiền</th>
+                  <th class="p-3 text-center">Thao Tác</th>
+                </tr>
+              </thead>
+              <tbody id="dashUrgentTable" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 2: LỆNH SỬA CHỮA (REPAIR ORDERS & QUOTATION)              -->
+      <!-- ============================================================== -->
+      <section id="tab-repair-orders" class="tab-content hidden space-y-5">
+        <!-- Search & Advanced Filter Controls -->
+        <div class="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="text-xs text-slate-400 font-semibold mr-1">Bộ lọc trạng thái:</span>
+            <button onclick="filterRO('ALL')" class="ro-filter-btn active px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 text-white transition-all">Tất cả</button>
+            <button onclick="filterRO('QUOTING')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Báo giá</button>
+            <button onclick="filterRO('WAIT_PART')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Chờ phụ tùng</button>
+            <button onclick="filterRO('REPAIRING')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Đang sửa</button>
+            <button onclick="filterRO('QC')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Kiểm tra QC</button>
+            <button onclick="filterRO('READY')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Sẵn sàng giao</button>
+            <button onclick="filterRO('COMPLETED')" class="ro-filter-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300 hover:text-white transition-all">Đã xuất xưởng</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="relative w-full sm:w-72">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+              <input type="text" id="roSearchInput" oninput="renderROTable()" placeholder="Tìm biển số, chủ xe, mã RO, SĐT..." class="w-full bg-slate-950 text-xs pl-8 pr-3 py-2 rounded-xl border border-slate-700 text-white outline-none focus:border-sky-500">
+            </div>
+            <button onclick="openNewROModal()" class="px-3 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 shrink-0">
+              <i class="fa-solid fa-plus"></i> Tạo RO Mới
+            </button>
+          </div>
+        </div>
+
+        <!-- Main Repair Order Table -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Mã Lệnh (RO)</th>
+                  <th class="p-3.5">Biển Số / Phương Tiện</th>
+                  <th class="p-3.5">Khách Hàng / SĐT</th>
+                  <th class="p-3.5">KTV Phụ Trách</th>
+                  <th class="p-3.5">ODO & Nhiên Liệu</th>
+                  <th class="p-3.5 text-center">Tiến Độ Quy Trình</th>
+                  <th class="p-3.5 text-right">Tạm Ứng</th>
+                  <th class="p-3.5 text-right">Tổng Tiền Báo Giá</th>
+                  <th class="p-3.5 text-center">Hành Động</th>
+                </tr>
+              </thead>
+              <tbody id="mainROTableBody" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Populated dynamically -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 3: TIẾN ĐỘ XƯỞNG THỜI GIAN THỰC (KANBAN BOARD)             -->
+      <!-- ============================================================== -->
+      <section id="tab-kanban" class="tab-content hidden space-y-4">
+        <div class="flex items-center justify-between bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div>
+            <h3 class="font-bold text-white text-sm">Bảng Điều Phối Cầu Nâng & Tiến Độ Sửa Chữa (Real-time Kanban)</h3>
+            <p class="text-xs text-slate-400">Theo dõi trạng thái từng xe qua 5 chặng quy trình xưởng</p>
+          </div>
+          <div class="text-xs text-slate-400 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Tự động đồng bộ với phòng Kỹ thuật</span>
+          </div>
+        </div>
+
+        <!-- Kanban Columns -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3.5 overflow-x-auto pb-4">
+          <!-- Col 1: Báo giá -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col min-w-[240px]">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+              <span class="font-bold text-xs text-sky-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-file-pen"></i> 1. Báo Giá Khách
+              </span>
+              <span id="kanbanCount-QUOTING" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-sky-950 text-sky-400 font-bold border border-sky-800">0</span>
+            </div>
+            <div id="kanbanCol-QUOTING" class="space-y-2.5 flex-1 overflow-y-auto max-h-[65vh]"></div>
+          </div>
+
+          <!-- Col 2: Chờ phụ tùng -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col min-w-[240px]">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+              <span class="font-bold text-xs text-amber-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-boxes-packing"></i> 2. Chờ Phụ Tùng
+              </span>
+              <span id="kanbanCount-WAIT_PART" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-amber-950 text-amber-400 font-bold border border-amber-800">0</span>
+            </div>
+            <div id="kanbanCol-WAIT_PART" class="space-y-2.5 flex-1 overflow-y-auto max-h-[65vh]"></div>
+          </div>
+
+          <!-- Col 3: Đang sửa chữa -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col min-w-[240px]">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+              <span class="font-bold text-xs text-indigo-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-wrench"></i> 3. Đang Sửa Chữa
+              </span>
+              <span id="kanbanCount-REPAIRING" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-400 font-bold border border-indigo-800">0</span>
+            </div>
+            <div id="kanbanCol-REPAIRING" class="space-y-2.5 flex-1 overflow-y-auto max-h-[65vh]"></div>
+          </div>
+
+          <!-- Col 4: Kiểm tra KCS/QC -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col min-w-[240px]">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+              <span class="font-bold text-xs text-purple-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-clipboard-check"></i> 4. Nghiệm Thu KCS
+              </span>
+              <span id="kanbanCount-QC" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-950 text-purple-400 font-bold border border-purple-800">0</span>
+            </div>
+            <div id="kanbanCol-QC" class="space-y-2.5 flex-1 overflow-y-auto max-h-[65vh]"></div>
+          </div>
+
+          <!-- Col 5: Sẵn sàng giao xe -->
+          <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex flex-col min-w-[240px]">
+            <div class="flex items-center justify-between pb-2.5 border-b border-slate-800 mb-3">
+              <span class="font-bold text-xs text-emerald-400 flex items-center gap-1.5">
+                <i class="fa-solid fa-flag-checkered"></i> 5. Sẵn Sàng Giao
+              </span>
+              <span id="kanbanCount-READY" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 font-bold border border-emerald-800">0</span>
+            </div>
+            <div id="kanbanCol-READY" class="space-y-2.5 flex-1 overflow-y-auto max-h-[65vh]"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 4: QUẢN LÝ KHO PHỤ TÙNG & VẬT TƯ (INVENTORY)               -->
+      <!-- ============================================================== -->
+      <section id="tab-inventory" class="tab-content hidden space-y-5">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button onclick="openNewPartModal()" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl flex items-center gap-1.5 transition-all">
+              <i class="fa-solid fa-plus-circle"></i> Thêm Phụ Tùng Mới
+            </button>
+            <button onclick="filterPartCategory('ALL')" class="part-cat-btn active px-3 py-1.5 rounded-xl text-xs font-bold bg-sky-600 text-white">Tất Cả Danh Mục</button>
+            <button onclick="filterPartCategory('Dầu nhớt')" class="part-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300">Dầu Nhớt & Phụ Gia</button>
+            <button onclick="filterPartCategory('Hệ thống Phanh')" class="part-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300">Phanh & Thắng</button>
+            <button onclick="filterPartCategory('Lọc & Động cơ')" class="part-cat-btn px-3 py-1.5 rounded-xl text-xs font-medium bg-slate-950 text-slate-300">Lọc & Động Cơ</button>
+            <button onclick="filterPartCategory('LOW_STOCK')" class="part-cat-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-950/60 text-rose-400 border border-rose-800/40">Sắp Hết Kho</button>
+          </div>
+
+          <div class="relative w-full sm:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <input type="text" id="partSearchInput" oninput="renderPartsTable()" placeholder="Tìm SKU, tên phụ tùng, dòng xe..." class="w-full bg-slate-950 text-xs pl-8 pr-3 py-2 rounded-xl border border-slate-700 text-white outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Mã SKU</th>
+                  <th class="p-3.5">Tên Phụ Tùng / Quy Cách</th>
+                  <th class="p-3.5">Nhóm Hàng</th>
+                  <th class="p-3.5">Đơn Vị</th>
+                  <th class="p-3.5 text-center">Tồn Kho</th>
+                  <th class="p-3.5 text-right">Giá Nhập Gốc</th>
+                  <th class="p-3.5 text-right">Giá Bán Niêm Yết</th>
+                  <th class="p-3.5 text-center">Trạng Thái Tồn</th>
+                  <th class="p-3.5 text-center">Thao Tác Nhanh</th>
+                </tr>
+              </thead>
+              <tbody id="partsTableBody" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 5: CRM KHÁCH HÀNG & HỒ SƠ PHƯƠNG TIỆN                     -->
+      <!-- ============================================================== -->
+      <section id="tab-customers" class="tab-content hidden space-y-5">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-900 p-4 rounded-2xl border border-slate-800">
+          <div>
+            <h3 class="font-bold text-white text-sm">Hồ Sơ Khách Hàng & Lịch Sử Bảo Dưỡng Ô Tô</h3>
+            <p class="text-xs text-slate-400">Tra cứu nhanh số khung VIN, số lần ghé xưởng và lịch hẹn kế tiếp</p>
+          </div>
+          <div class="relative w-full sm:w-72">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-xs text-slate-500"></i>
+            <input type="text" id="customerSearchInput" oninput="renderCustomersTable()" placeholder="Tìm chủ xe, biển số, SĐT, số VIN..." class="w-full bg-slate-950 text-xs pl-8 pr-3 py-2 rounded-xl border border-slate-700 text-white outline-none focus:border-sky-500">
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3.5">Chủ Phương Tiện</th>
+                  <th class="p-3.5">Số Điện Thoại</th>
+                  <th class="p-3.5">Biển Số Đăng Ký</th>
+                  <th class="p-3.5">Hãng & Dòng Xe</th>
+                  <th class="p-3.5">Số Khung (VIN)</th>
+                  <th class="p-3.5 text-center">Lượt Sửa Chữa</th>
+                  <th class="p-3.5 text-right">Tổng Chi Tiêu</th>
+                  <th class="p-3.5 text-center">Hẹn Bảo Dưỡng Kế</th>
+                  <th class="p-3.5 text-center">Lịch Sử Xe</th>
+                </tr>
+              </thead>
+              <tbody id="customerTableBody" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 6: ĐỘI NGŨ KỸ THUẬT VIÊN & HOA HỒNG                       -->
+      <!-- ============================================================== -->
+      <section id="tab-technicians" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1">Tổng Kỹ Thuật Viên</div>
+            <div class="text-2xl font-bold font-mono text-white">12 Thợ</div>
+            <p class="text-[11px] text-emerald-400 mt-1">Đầy đủ 4 tổ chuyên môn</p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1">Cầu Nâng Khả Dụng</div>
+            <div class="text-2xl font-bold font-mono text-sky-400">6 / 8 Cầu</div>
+            <p class="text-[11px] text-slate-400 mt-1">2 cầu bảo dưỡng nhanh 30p</p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1">Quỹ Hoa Hồng Dự Kiến</div>
+            <div class="text-2xl font-bold font-mono text-emerald-400">38.400.000 đ</div>
+            <p class="text-[11px] text-slate-400 mt-1">Trích 10-15% tiền công thợ</p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+            <div class="text-[11px] text-slate-400 uppercase font-semibold mb-1">Tỷ Lệ Nghiệm Thu QC 1 Lần</div>
+            <div class="text-2xl font-bold font-mono text-amber-400">97.8%</div>
+            <p class="text-[11px] text-emerald-400 mt-1">Chất lượng xưởng xuất sắc</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <h3 class="font-bold text-white text-sm mb-3">Bảng Quản Lý Tay Nghề, Phân Bổ Việc & Hoa Hồng Thợ</h3>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3">Mã KTV</th>
+                  <th class="p-3">Họ Tên Thợ</th>
+                  <th class="p-3">Tổ Chuyên Môn / Bậc Thợ</th>
+                  <th class="p-3 text-center">Xe Đang Làm</th>
+                  <th class="p-3 text-center">Lệnh Xong (Tháng)</th>
+                  <th class="p-3 text-right">Hoa Hồng Tạm Tính</th>
+                  <th class="p-3 text-center">Đánh Giá KCS</th>
+                  <th class="p-3 text-center">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="technicianTableBody" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 7: KẾ TOÁN, THU CHI & HÓA ĐƠN VAT                          -->
+      <!-- ============================================================== -->
+      <section id="tab-finance" class="tab-content hidden space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+            <div class="text-xs text-slate-400 uppercase font-semibold mb-1">Tổng Thu Tháng 10/2026</div>
+            <div class="text-2xl font-bold font-mono text-emerald-400">485.600.000 đ</div>
+            <p class="text-xs text-slate-400 mt-2">Bao gồm thanh toán tiền mặt, chuyển khoản VietQR và POS thẻ.</p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+            <div class="text-xs text-slate-400 uppercase font-semibold mb-1">Tổng Chi Nhập Phụ Tùng & Chi Phí</div>
+            <div class="text-2xl font-bold font-mono text-rose-400">289.400.000 đ</div>
+            <p class="text-xs text-slate-400 mt-2">Thanh toán công nợ nhà cung cấp dầu nhớt, má phanh, phụ tùng gầm.</p>
+          </div>
+          <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+            <div class="text-xs text-slate-400 uppercase font-semibold mb-1">Lợi Nhuận Gộp Ước Tính</div>
+            <div class="text-2xl font-bold font-mono text-sky-400">196.200.000 đ</div>
+            <p class="text-xs text-emerald-400 mt-2">Biên lợi nhuận gộp toàn xưởng đạt ~ 40.3%.</p>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-white text-sm">Sổ Nhật Ký Giao Dịch Thu Tiền & Hóa Đơn</h3>
+              <p class="text-xs text-slate-400">Theo dõi tạm ứng cọc và quyết toán lệnh sửa chữa (RO)</p>
+            </div>
+            <button onclick="showToast('Chức năng xuất File Excel Báo Cáo Thuế đang chuẩn bị.')" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-slate-700">
+              <i class="fa-solid fa-file-excel mr-1"></i> Xuất File Kế Toán
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-300">
+              <thead class="bg-slate-950 text-slate-400 uppercase font-mono text-[10px] border-b border-slate-800">
+                <tr>
+                  <th class="p-3">Mã Giao Dịch</th>
+                  <th class="p-3">Lệnh RO</th>
+                  <th class="p-3">Chủ Xe</th>
+                  <th class="p-3">Hình Thức</th>
+                  <th class="p-3">Loại Thu/Chi</th>
+                  <th class="p-3 text-right">Số Tiền</th>
+                  <th class="p-3 text-center">Thời Gian</th>
+                  <th class="p-3 text-center">Trạng Thái</th>
+                </tr>
+              </thead>
+              <tbody id="financeLedgerTable" class="divide-y divide-slate-800/80 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 8: BÁO CÁO KPI & NĂNG SUẤT XƯỞNG                           -->
+      <!-- ============================================================== -->
+      <section id="tab-reports" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+          <h3 class="font-bold text-white text-sm mb-1">Báo Cáo Phân Tích Hiệu Quả Kinh Doanh & Vận Hành</h3>
+          <p class="text-xs text-slate-400 mb-6">Đánh giá các chỉ số cốt lõi của Gara trong Quý IV/2026</p>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-4">
+              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Doanh thu trung bình / Lượt xe (AOV)</div>
+                <div class="text-xl font-bold font-mono text-emerald-400 mt-1">3.850.000 đ</div>
+                <div class="text-[11px] text-slate-500 mt-1">+12% so với tháng trước</div>
+              </div>
+              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Thời gian sửa trung bình / Xe (Turnaround)</div>
+                <div class="text-xl font-bold font-mono text-sky-400 mt-1">4.2 Giờ</div>
+                <div class="text-[11px] text-slate-500 mt-1">Tối ưu hơn 45 phút nhờ Kanban</div>
+              </div>
+              <div class="bg-slate-950 p-4 rounded-xl border border-slate-800">
+                <div class="text-xs text-slate-400">Tỷ lệ khách hàng quay lại (Retention)</div>
+                <div class="text-xl font-bold font-mono text-amber-400 mt-1">78.5%</div>
+                <div class="text-[11px] text-slate-500 mt-1">Nhờ SMS/Zalo nhắc bảo dưỡng định kỳ</div>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 bg-slate-950 p-4 rounded-xl border border-slate-800">
+              <div class="text-xs font-bold text-slate-300 mb-2">Top 5 Dịch Vụ Mang Lại Doanh Thu Cao Nhất:</div>
+              <div class="space-y-3 text-xs">
+                <div>
+                  <div class="flex justify-between text-slate-300 mb-1">
+                    <span>1. Bảo dưỡng định kỳ 40.000 km & 80.000 km</span>
+                    <span class="font-mono font-bold text-white">142.500.000 đ (34%)</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2">
+                    <div class="bg-sky-500 h-2 rounded-full" style="width: 34%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-300 mb-1">
+                    <span>2. Đại tu gầm, thay rô-tuyn & giảm xóc</span>
+                    <span class="font-mono font-bold text-white">98.000.000 đ (23%)</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2">
+                    <div class="bg-blue-500 h-2 rounded-full" style="width: 23%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-300 mb-1">
+                    <span>3. Sơn dặm, đổi màu & phục hồi thân vỏ bảo hiểm</span>
+                    <span class="font-mono font-bold text-white">76.400.000 đ (18%)</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2">
+                    <div class="bg-emerald-500 h-2 rounded-full" style="width: 18%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-300 mb-1">
+                    <span>4. Chăm sóc xe cao cấp, phủ Ceramic & vệ sinh nội thất</span>
+                    <span class="font-mono font-bold text-white">55.200.000 đ (13%)</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2">
+                    <div class="bg-amber-500 h-2 rounded-full" style="width: 13%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex justify-between text-slate-300 mb-1">
+                    <span>5. Sửa chữa hệ thống điện máy lạnh & nạp ga lạnh R134a/R1234yf</span>
+                    <span class="font-mono font-bold text-white">51.000.000 đ (12%)</span>
+                  </div>
+                  <div class="w-full bg-slate-800 rounded-full h-2">
+                    <div class="bg-purple-500 h-2 rounded-full" style="width: 12%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============================================================== -->
+      <!-- TAB 9: CẤU HÌNH & THIẾT LẬP GARA                              -->
+      <!-- ============================================================== -->
+      <section id="tab-settings" class="tab-content hidden space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 max-w-4xl">
+          <h3 class="font-bold text-white text-base mb-1">Thông Tin Pháp Lý & Thiết Lập In Hóa Đơn Xưởng</h3>
+          <p class="text-xs text-slate-400 mb-6">Thông tin này sẽ hiển thị trực tiếp trên đầu Phiếu Báo Giá và Hóa Đơn VAT khi in cho khách</p>
+
+          <form onsubmit="handleSaveSettings(event)" class="space-y-4 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-400 mb-1">Tên Thương Hiệu Gara *</label>
+                <input type="text" id="settingGaraName" value="GARATECH AUTO SERVICE CENTER" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Hotline Dịch Vụ 24/7 *</label>
+                <input type="text" id="settingGaraPhone" value="0909.888.999 - 0236.3789.999" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-slate-400 mb-1">Địa Chỉ Xưởng Trụ Sở *</label>
+                <input type="text" id="settingGaraAddress" value="128 Nguyễn Hữu Thọ, Q. Cẩm Lệ, TP. Đà Nẵng" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Mã Số Thuế (MST Doanh Nghiệp)</label>
+                <input type="text" id="settingGaraTax" value="0401998877" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-sky-500">
+              </div>
+              <div>
+                <label class="block text-slate-400 mb-1">Thuế Suất VAT Mặc Định (%)</label>
+                <input type="number" id="settingGaraVatRate" value="8" min="0" max="10" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-sky-500">
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-slate-400 mb-1">Tài Khoản Ngân Hàng Nhận Chuyển Khoản (VietQR)</label>
+                <input type="text" id="settingGaraBank" value="MBBank - 888899996868 - CTY CP DICH VU O TO GARATECH" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800 flex justify-end">
+              <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl shadow-lg shadow-sky-600/30">
+                Lưu Thay Đổi Cấu Hình
+              </button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: TẠO PHIẾU TIẾP NHẬN XE MỚI (RO)                         -->
+  <!-- ============================================================== -->
+  <div id="modalNewRO" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full p-6 shadow-2xl overflow-y-auto max-h-[92vh]">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-car-on"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Lập Phiếu Tiếp Nhận & Lệnh Sửa Chữa Mới</h3>
+            <p class="text-xs text-slate-400">Khám nghiệm xe đầu vào và ghi nhận hiện trạng ban đầu</p>
+          </div>
+        </div>
+        <button onclick="closeModal('modalNewRO')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreateRO(event)" class="mt-4 space-y-4 text-xs">
+        <!-- 1. Khách Hàng -->
+        <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+          <div class="font-bold text-sky-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+            <i class="fa-solid fa-user"></i> 1. Thông Tin Khách Hàng
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1">Tên khách hàng / Đơn vị *</label>
+              <input type="text" id="newRoCustName" required placeholder="Ví dụ: Hoàng Tuấn Anh" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Số điện thoại liên hệ *</label>
+              <input type="tel" id="newRoCustPhone" required placeholder="0905.888.999" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Phương tiện -->
+        <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+          <div class="font-bold text-sky-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+            <i class="fa-solid fa-car"></i> 2. Thông Tin Phương Tiện
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1">Biển số xe *</label>
+              <input type="text" id="newRoPlate" required placeholder="43A-999.88" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 font-mono font-bold text-sky-400 uppercase outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Hãng xe & Model *</label>
+              <input type="text" id="newRoCarModel" required placeholder="VinFast VF8 Plus 2023" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Số ODO (km) *</label>
+              <input type="number" id="newRoOdo" required placeholder="32000" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono outline-none focus:border-sky-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-slate-400 mb-1">Số Khung (VIN):</label>
+              <input type="text" id="newRoVin" placeholder="VF8EB2390881..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono uppercase outline-none focus:border-sky-500">
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Mức nhiên liệu / Pin:</label>
+              <select id="newRoFuel" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+                <option value="1/4">1/4 Bình (Sắp hết)</option>
+                <option value="1/2" selected>1/2 Bình</option>
+                <option value="3/4">3/4 Bình</option>
+                <option value="Đầy bình">Đầy bình / 100% Pin</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">KTV Trưởng phân công:</label>
+              <select id="newRoMechanic" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white outline-none focus:border-sky-500">
+                <option value="Trần Đình Huy">Trần Đình Huy (Tổ Máy - Điện)</option>
+                <option value="Lê Văn Hùng">Lê Văn Hùng (Tổ Gầm Bệ)</option>
+                <option value="Nguyễn Văn Bình">Nguyễn Văn Bình (Tổ Đồng Sơn)</option>
+                <option value="Đỗ Quang Thắng">Đỗ Quang Thắng (Tổ Điện Lạnh)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Yêu cầu & Triệu chứng -->
+        <div class="bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80 space-y-3">
+          <div class="font-bold text-sky-400 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+            <i class="fa-solid fa-screwdriver-wrench"></i> 3. Yêu Cầu Dịch Vụ & Hiện Trạng Xe
+          </div>
+          <div>
+            <textarea id="newRoSymptoms" required rows="3" placeholder="Mô tả hiện trạng: Thay dầu máy, kiểm tra độ mòn má phanh trước, tiếng kêu lục cục dưới gầm khi đánh lái, xước nhẹ vạt cản..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white outline-none focus:border-sky-500 leading-relaxed"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-3 pt-2">
+          <button type="button" onclick="closeModal('modalNewRO')" class="px-5 py-2.5 rounded-xl border border-slate-700 hover:bg-slate-800 text-slate-300 font-bold transition-colors">
+            Hủy Bỏ
+          </button>
+          <button type="submit" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl shadow-lg shadow-sky-600/30 transition-all">
+            Lập Lệnh & Vào Xưởng
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: CHI TIẾT LỆNH SỬA CHỮA (RO DETAIL & BÁO GIÁ)           -->
+  <!-- ============================================================== -->
+  <div id="modalRODetail" class="fixed inset-0 z-50 hidden flex items-center justify-center p-3 sm:p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-4xl w-full p-5 sm:p-6 shadow-2xl flex flex-col max-h-[94vh]">
+      
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+        <div class="flex items-center gap-3">
+          <span id="roDetailCode" class="text-sm font-mono font-bold bg-sky-950 text-sky-400 border border-sky-800 px-3 py-1 rounded-xl">RO-2026-001</span>
+          <div>
+            <h3 id="roDetailPlateTitle" class="text-base sm:text-lg font-bold text-white">43A-567.89 (Toyota Vios)</h3>
+            <p id="roDetailCustMeta" class="text-xs text-slate-400">Khách: Trần Minh Hoàng | SĐT: 0905.123.456</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="printCurrentRO()" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-700">
+            <i class="fa-solid fa-print"></i> In Báo Giá / VAT
+          </button>
+          <button onclick="closeModal('modalRODetail')" class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body (Scrollable) -->
+      <div class="overflow-y-auto flex-1 py-4 space-y-4 text-xs pr-1">
+        
+        <!-- Interactive Workflow Step Pipeline -->
+        <div class="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800">
+          <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2.5">Quy Trình Chuyển Bước Thực Tế:</div>
+          <div class="grid grid-cols-2 sm:grid-cols-5 gap-2" id="roStatusButtonsGroup">
+            <!-- Dynamically created buttons -->
+          </div>
+        </div>
+
+        <!-- Vehicle Metadata Info -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 bg-slate-950/50 p-3.5 rounded-2xl border border-slate-800 text-slate-300">
+          <div><span class="text-slate-500">Số ODO:</span> <strong id="roDetailOdo" class="text-white font-mono">42,500 km</strong></div>
+          <div><span class="text-slate-500">Mức Nhiên Liệu:</span> <strong id="roDetailFuel" class="text-white">1/2 Bình</strong></div>
+          <div><span class="text-slate-500">Số Khung VIN:</span> <strong id="roDetailVin" class="text-sky-400 font-mono">RL4BT4399...</strong></div>
+          <div><span class="text-slate-500">KTV phụ trách:</span> <strong id="roDetailMechanic" class="text-emerald-400">Trần Đình Huy</strong></div>
+          <div class="sm:col-span-4 pt-2 border-t border-slate-800/80">
+            <span class="text-slate-500">Hiện trạng & Yêu cầu từ khách:</span> 
+            <p id="roDetailSymptoms" class="text-slate-200 italic mt-0.5 font-sans">Bảo dưỡng cấp 4 vạn km, vệ sinh bướm ga và phanh 4 bánh</p>
+          </div>
+        </div>
+
+        <!-- Quotation Parts & Labor Items -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-2xl overflow-hidden p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 class="font-bold text-white text-xs uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-sky-400"></i> Bảng Chi Tiết Phụ Tùng & Tiền Công
+            </h4>
+            <button onclick="openAddItemModal()" class="px-3 py-1.5 bg-sky-600/30 hover:bg-sky-600 text-sky-300 hover:text-white rounded-lg text-xs font-semibold border border-sky-500/30 transition-colors flex items-center gap-1.5">
+              <i class="fa-solid fa-plus text-[10px]"></i> Thêm Hạng Mục
+            </button>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-900 text-slate-400 font-mono text-[10px] uppercase">
+                <tr>
+                  <th class="p-2.5">Phân Loại</th>
+                  <th class="p-2.5">Tên Chi Tiết / Quy Cách</th>
+                  <th class="p-2.5 text-center">Số Lượng</th>
+                  <th class="p-2.5 text-right">Đơn Giá</th>
+                  <th class="p-2.5 text-right">Thành Tiền</th>
+                  <th class="p-2.5 text-center">Xóa</th>
+                </tr>
+              </thead>
+              <tbody id="roItemsTableBody" class="divide-y divide-slate-800 text-slate-300 font-medium">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Financial Calculation Breakdown -->
+          <div class="pt-3 border-t border-slate-800 flex flex-col items-end space-y-1.5 text-xs">
+            <div class="flex justify-between w-72 text-slate-400">
+              <span>Tổng tiền phụ tùng:</span>
+              <span id="roSummaryParts" class="font-mono text-white">0 đ</span>
+            </div>
+            <div class="flex justify-between w-72 text-slate-400">
+              <span>Tổng tiền công thợ:</span>
+              <span id="roSummaryLabor" class="font-mono text-white">0 đ</span>
+            </div>
+            <div class="flex justify-between w-72 text-slate-400">
+              <span>Thuế GTGT (VAT 8%):</span>
+              <span id="roSummaryTax" class="font-mono text-white">0 đ</span>
+            </div>
+            <div class="flex justify-between w-72 text-slate-400">
+              <span>Khách đã tạm ứng cọc:</span>
+              <span id="roSummaryDeposit" class="font-mono text-amber-400 font-semibold">- 0 đ</span>
+            </div>
+            <div class="flex justify-between w-72 text-sm font-bold text-sky-400 pt-2 border-t border-slate-800">
+              <span>Còn lại phải thu:</span>
+              <span id="roSummaryRemaining" class="font-mono text-base text-emerald-400">0 đ</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="pt-3 border-t border-slate-800 flex justify-between items-center shrink-0">
+        <div class="text-[11px] text-slate-400">
+          * Tiến độ và xuất nhập kho được tự động cập nhật khi bạn chuyển trạng thái
+        </div>
+        <div class="flex gap-2">
+          <button onclick="closeModal('modalRODetail')" class="px-5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold">
+            Đóng
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: THÊM HẠNG MỤC VÀO LỆNH SỬA CHỮA                        -->
+  <!-- ============================================================== -->
+  <div id="modalAddItem" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="font-bold text-white text-sm">Thêm Phụ Tùng Hoặc Tiền Công</h3>
+        <button onclick="closeModal('modalAddItem')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleAddItemToRO(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Loại hạng mục:</label>
+          <select id="addItemType" onchange="toggleItemTypeSelection(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none">
+            <option value="PART">Phụ Tùng Kho (Trừ tồn kho tự động)</option>
+            <option value="LABOR">Tiền Công Kỹ Thuật Viên</option>
+          </select>
+        </div>
+
+        <div id="selectFromPartGroup">
+          <label class="block text-slate-400 mb-1">Chọn từ danh mục kho:</label>
+          <select id="addItemPartSelect" onchange="fillPartPrice(this.value)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none">
+            <!-- Populated from inventory -->
+          </select>
+        </div>
+
+        <div id="customNameGroup" class="hidden">
+          <label class="block text-slate-400 mb-1">Tên dịch vụ kỹ thuật:</label>
+          <input type="text" id="addItemCustomName" placeholder="Ví dụ: Công căn chỉnh độ chụm bánh xe lái" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Số lượng:</label>
+            <input type="number" id="addItemQty" value="1" min="1" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Đơn giá bán (VNĐ):</label>
+            <input type="number" id="addItemPrice" value="0" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono outline-none">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalAddItem')" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Hủy</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-bold">Thêm Vào Báo Giá</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: THÊM MỚI PHỤ TÙNG VÀO KHO                              -->
+  <!-- ============================================================== -->
+  <div id="modalNewPart" class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+    <div class="bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-5 shadow-2xl">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800 mb-4">
+        <h3 class="font-bold text-white text-sm">Thêm Phụ Tùng Mới Vào Kho</h3>
+        <button onclick="closeModal('modalNewPart')" class="text-slate-400 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <form onsubmit="handleCreatePart(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-slate-400 mb-1">Mã SKU Phụ tùng *</label>
+          <input type="text" id="newPartSku" required placeholder="PT-OIL-0W20" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono uppercase outline-none focus:border-emerald-500">
+        </div>
+        <div>
+          <label class="block text-slate-400 mb-1">Tên phụ tùng & Thông số *</label>
+          <input type="text" id="newPartName" required placeholder="Dầu Motul 300V Power 0W-20 (Can 4L)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none focus:border-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-400 mb-1">Nhóm ngành hàng:</label>
+            <select id="newPartCategory" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none">
+              <option value="Dầu nhớt">Dầu nhớt & Phụ gia</option>
+              <option value="Hệ thống Phanh">Hệ thống Phanh</option>
+              <option value="Lọc & Động cơ">Lọc & Động cơ</option>
+              <option value="Gầm bệ">Gầm bệ & Treo</option>
+              <option value="Điện & Bình">Điện & Bình ắc quy</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Đơn vị tính:</label>
+            <input type="text" id="newPartUnit" required placeholder="Can 4L, Bộ, Cái..." class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white outline-none">
+          </div>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div>
+            <label class="block text-slate-400 mb-1">Tồn kho:</label>
+            <input type="number" id="newPartStock" required value="10" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Giá nhập:</label>
+            <input type="number" id="newPartBuyPrice" required placeholder="550000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono outline-none">
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">Giá bán ra:</label>
+            <input type="number" id="newPartSellPrice" required placeholder="850000" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono outline-none">
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end gap-2">
+          <button type="button" onclick="closeModal('modalNewPart')" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 font-bold">Hủy</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold">Lưu Vào Kho</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- PRINTABLE INVOICE TEMPLATE (IN HÓA ĐƠN & PHIẾU BÀN GIAO)       -->
+  <!-- ============================================================== -->
+  <div id="printInvoiceArea" class="hidden p-6 bg-white text-black font-sans">
+    <div class="border-b-2 border-black pb-3 mb-4 flex justify-between items-start">
+      <div>
+        <h1 class="text-xl font-bold uppercase tracking-tight" id="printGaraNameHeader">GARATECH AUTO SERVICE CENTER</h1>
+        <p class="text-xs" id="printGaraAddressHeader">Địa chỉ: 128 Nguyễn Hữu Thọ, Q. Cẩm Lệ, TP. Đà Nẵng</p>
+        <p class="text-xs">Hotline Cứu Hộ / Đặt Hẹn: <span id="printGaraPhoneHeader">0909.888.999</span> | MST: 0401998877</p>
+      </div>
+      <div class="text-right">
+        <h2 class="text-base font-bold uppercase text-sky-800" id="printInvoiceDocTitle">PHIẾU BÁO GIÁ & QUYẾT TOÁN</h2>
+        <p class="text-xs font-mono font-bold" id="printInvoiceCode">RO-2026-001</p>
+        <p class="text-[11px] text-gray-500" id="printInvoiceDate">Ngày: 19/10/2026</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 text-xs border border-gray-300 p-3 mb-4 rounded gap-2">
+      <div>
+        <p><strong>Khách hàng:</strong> <span id="printCustName">Trần Minh Hoàng</span></p>
+        <p><strong>Số điện thoại:</strong> <span id="printCustPhone">0905.123.456</span></p>
+        <p><strong>Cố vấn dịch vụ:</strong> <span>Nguyễn Anh Duy</span></p>
+      </div>
+      <div>
+        <p><strong>Biển số xe:</strong> <span id="printPlate" class="font-bold">43A-567.89</span></p>
+        <p><strong>Hãng xe & Model:</strong> <span id="printCarModel">Toyota Vios 1.5G</span></p>
+        <p><strong>Số ODO / Xăng:</strong> <span id="printOdo">42,500 km</span> | <span id="printFuel">1/2 bình</span></p>
+      </div>
+    </div>
+
+    <table class="w-full text-xs border border-collapse border-black mb-4">
+      <thead>
+        <tr class="bg-gray-100 border-b border-black">
+          <th class="border border-black p-2 text-center w-10">STT</th>
+          <th class="border border-black p-2 text-left">Nội dung phụ tùng / Hạng mục công dịch vụ</th>
+          <th class="border border-black p-2 text-center w-16">Phân loại</th>
+          <th class="border border-black p-2 text-center w-12">SL</th>
+          <th class="border border-black p-2 text-right w-24">Đơn giá</th>
+          <th class="border border-black p-2 text-right w-28">Thành tiền</th>
+        </tr>
+      </thead>
+      <tbody id="printInvoiceTableBody">
+        <!-- Rendered before printing -->
+      </tbody>
+      <tfoot class="font-bold">
+        <tr>
+          <td colspan="5" class="p-2 text-right border border-black">Tiền phụ tùng:</td>
+          <td id="printSumParts" class="p-2 text-right border border-black">0 đ</td>
+        </tr>
+        <tr>
+          <td colspan="5" class="p-2 text-right border border-black">Tiền công thợ:</td>
+          <td id="printSumLabor" class="p-2 text-right border border-black">0 đ</td>
+        </tr>
+        <tr>
+          <td colspan="5" class="p-2 text-right border border-black">Thuế VAT (8%):</td>
+          <td id="printSumVat" class="p-2 text-right border border-black">0 đ</td>
+        </tr>
+        <tr>
+          <td colspan="5" class="p-2 text-right border border-black">Tiền khách đã tạm ứng:</td>
+          <td id="printSumDeposit" class="p-2 text-right border border-black text-amber-700">- 0 đ</td>
+        </tr>
+        <tr class="bg-gray-100 text-sm">
+          <td colspan="5" class="p-2 text-right border border-black">TỔNG CỘNG THANH TOÁN CÒN LẠI:</td>
+          <td id="printSumGrand" class="p-2 text-right border border-black text-base text-red-600">0 đ</td>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div class="grid grid-cols-3 text-center text-xs mt-10 pt-4">
+      <div>
+        <p class="font-bold">KHÁCH HÀNG</p>
+        <p class="italic text-[10px] text-gray-500">(Ký và xác nhận nhận xe)</p>
+      </div>
+      <div>
+        <p class="font-bold">CỐ VẤN DỊCH VỤ</p>
+        <p class="italic text-[10px] text-gray-500">(Lập phiếu báo giá)</p>
+      </div>
+      <div>
+        <p class="font-bold">QUẢN ĐỐC / GIÁM ĐỐC</p>
+        <p class="italic text-[10px] text-gray-500">(Kiểm tra KCS xuất xưởng)</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- TOAST NOTIFICATION                                             -->
+  <!-- ============================================================== -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 bg-slate-900 border border-slate-700 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-sky-400 text-base"></i>
+    <span id="toastMsg">Thao tác thành công</span>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 3. JAVASCRIPT APPLICATION LOGIC & STATE ENGINE                 -->
+  <!-- ============================================================== -->
+  <script>
+    /* ----------------------------------------------------
+       A. CORE APPLICATION DATABASE & MOCK DATA
+    ---------------------------------------------------- */
+    let CURRENT_ROLE = 'advisor';
+    let currentViewingRO = null;
+    let activeROFilter = 'ALL';
+    let activePartCatFilter = 'ALL';
+
+    // Cấu hình gara
+    let GARA_SETTINGS = {
+      name: "GARATECH AUTO SERVICE CENTER",
+      phone: "0909.888.999 - 0236.3789.999",
+      address: "128 Nguyễn Hữu Thọ, Q. Cẩm Lệ, TP. Đà Nẵng",
+      taxCode: "0401998877",
+      vatRate: 8,
+      bank: "MBBank - 888899996868 - CTY CP DICH VU O TO GARATECH"
+    };
+
+    // Kho Phụ Tùng
+    let INVENTORY = [
+      { id: 1, sku: 'OIL-CAST-5W30', name: 'Nhớt Castrol Magnatec Stop-Start 5W-30 (Can 4L)', category: 'Dầu nhớt', unit: 'Can', stock: 22, minStock: 6, buyPrice: 420000, sellPrice: 650000 },
+      { id: 2, sku: 'OIL-MOTUL-0W20', name: 'Dầu Tổng Hợp Toàn Phần Motul 8100 0W-20 (Can 4L)', category: 'Dầu nhớt', unit: 'Can', stock: 2, minStock: 4, buyPrice: 750000, sellPrice: 1150000 }, // Sắp hết
+      { id: 3, sku: 'FLT-OIL-VIOS', name: 'Lọc nhớt chính hãng Toyota Vios / Yaris / Cross', category: 'Lọc & Động cơ', unit: 'Cái', stock: 28, minStock: 5, buyPrice: 65000, sellPrice: 150000 },
+      { id: 4, sku: 'FLT-AIR-VF8', name: 'Lọc gió điều hòa than hoạt tính VinFast VF8 / VF9', category: 'Lọc & Động cơ', unit: 'Cái', stock: 15, minStock: 3, buyPrice: 180000, sellPrice: 350000 },
+      { id: 5, sku: 'BRK-PAD-FR-CRV', name: 'Bộ má phanh đĩa trước Honda CR-V (Akebono Ceramic)', category: 'Hệ thống Phanh', unit: 'Bộ', stock: 1, minStock: 4, buyPrice: 850000, sellPrice: 1350000 }, // Sắp hết
+      { id: 6, sku: 'BRK-PAD-RR-CX5', name: 'Bộ má phanh đĩa sau Mazda CX-5 / CX-8', category: 'Hệ thống Phanh', unit: 'Bộ', stock: 6, minStock: 3, buyPrice: 720000, sellPrice: 1100000 },
+      { id: 7, sku: 'SPK-NGK-IRID', name: 'Bugi Iridium Chân Dài NGK Laser Platinum', category: 'Lọc & Động cơ', unit: 'Cái', stock: 36, minStock: 8, buyPrice: 120000, sellPrice: 220000 },
+      { id: 8, sku: 'BAT-GS-65AH', name: 'Bình Ắc quy khô miễn bảo dưỡng GS MF 55D23L (12V - 65Ah)', category: 'Điện & Bình', unit: 'Bình', stock: 8, minStock: 3, buyPrice: 1150000, sellPrice: 1650000 },
+      { id: 9, sku: 'SHK-FR-RANGER', name: 'Giảm xóc phuộc nhún trước Ford Ranger / Everest', category: 'Gầm bệ', unit: 'Cây', stock: 2, minStock: 4, buyPrice: 1450000, sellPrice: 2200000 } // Sắp hết
+    ];
+
+    // Lệnh Sửa Chữa (RO - Repair Orders)
+    let REPAIR_ORDERS = [
+      {
+        id: 'RO-2026-001',
+        customerName: 'Trần Minh Hoàng',
+        phone: '0905.123.456',
+        plate: '43A-567.89',
+        carModel: 'Toyota Vios 1.5G 2021',
+        vin: 'RL4BT4399MV01298',
+        odo: 42500,
+        fuel: '1/2',
+        mechanic: 'Trần Đình Huy',
+        status: 'REPAIRING', // QUOTING, WAIT_PART, REPAIRING, QC, READY, COMPLETED
+        symptoms: 'Bảo dưỡng cấp 4 vạn km, vệ sinh bướm ga và phanh 4 bánh',
+        deposit: 500000,
+        date: '19/10/2026',
+        items: [
+          { type: 'PART', name: 'Nhớt Castrol Magnatec Stop-Start 5W-30 (Can 4L)', qty: 1, price: 650000 },
+          { type: 'PART', name: 'Lọc nhớt chính hãng Toyota Vios / Yaris / Cross', qty: 1, price: 150000 },
+          { type: 'LABOR', name: 'Công bảo dưỡng cấp 4 vạn km + vệ sinh phanh 4 bánh', qty: 1, price: 500000 }
+        ]
+      },
+      {
+        id: 'RO-2026-002',
+        customerName: 'Lê Hoàng Long',
+        phone: '0913.888.222',
+        plate: '51H-992.14',
+        carModel: 'Ford Ranger Wildtrak 2.0 Bi-Turbo',
+        vin: 'MNBUMF820NW99812',
+        odo: 78000,
+        fuel: '3/4',
+        mechanic: 'Lê Văn Hùng',
+        status: 'WAIT_PART',
+        symptoms: 'Tiếng kêu lục cục gầm trước, giảm xóc trước có dấu hiệu rò dầu',
+        deposit: 1500000,
+        date: '19/10/2026',
+        items: [
+          { type: 'PART', name: 'Giảm xóc phuộc nhún trước Ford Ranger / Everest', qty: 2, price: 2200000 },
+          { type: 'LABOR', name: 'Công ép lò xo, thay thế phuộc trước & cân lái vi tính', qty: 1, price: 650000 }
+        ]
+      },
+      {
+        id: 'RO-2026-003',
+        customerName: 'Phạm Thị Bích Thủy',
+        phone: '0988.777.666',
+        plate: '43E-012.34',
+        carModel: 'VinFast VF8 Plus 2023',
+        vin: 'VF8EB23908819200',
+        odo: 25000,
+        fuel: 'Đầy bình',
+        mechanic: 'Trần Đình Huy',
+        status: 'QUOTING',
+        symptoms: 'Kiểm tra hệ thống làm mát pin, thay lọc gió điều hòa than hoạt tính, đảo lốp',
+        deposit: 0,
+        date: '19/10/2026',
+        items: [
+          { type: 'PART', name: 'Lọc gió điều hòa than hoạt tính VinFast VF8 / VF9', qty: 1, price: 350000 },
+          { type: 'LABOR', name: 'Công quét lỗi phần mềm chẩn đoán & đảo lốp 4 bánh', qty: 1, price: 250000 }
+        ]
+      },
+      {
+        id: 'RO-2026-004',
+        customerName: 'Vũ Quốc Thái',
+        phone: '0903.444.111',
+        plate: '43C-112.90',
+        carModel: 'Honda CR-V 1.5L Turbo 2020',
+        vin: 'R8HRE2850LL00123',
+        odo: 63000,
+        fuel: '1/4',
+        mechanic: 'Nguyễn Văn Bình',
+        status: 'QC',
+        symptoms: 'Rà phanh nghe tiếng rít kim loại, phục hồi gò sơn vạt cản trước',
+        deposit: 1000000,
+        date: '18/10/2026',
+        items: [
+          { type: 'PART', name: 'Bộ má phanh đĩa trước Honda CR-V (Akebono Ceramic)', qty: 1, price: 1350000 },
+          { type: 'LABOR', name: 'Công phục hồi vết móp & sơn sấy hấp cản trước', qty: 1, price: 900000 }
+        ]
+      },
+      {
+        id: 'RO-2026-005',
+        customerName: 'Đặng Ngọc Tuấn',
+        phone: '0935.555.999',
+        plate: '43A-789.01',
+        carModel: 'Mazda CX-5 2.0 Luxury',
+        vin: 'MM6KF4730NW44890',
+        odo: 51000,
+        fuel: '1/2',
+        mechanic: 'Lê Văn Hùng',
+        status: 'READY',
+        symptoms: 'Thay 4 bugi Iridium chân dài, thay dầu phanh & vệ sinh buồng đốt',
+        deposit: 1000000,
+        date: '18/10/2026',
+        items: [
+          { type: 'PART', name: 'Bugi Iridium Chân Dài NGK Laser Platinum', qty: 4, price: 220000 },
+          { type: 'LABOR', name: 'Công bắn trấu vệ sinh họng nạp buồng đốt & thay bugi', qty: 1, price: 650000 }
+        ]
+      }
+    ];
+
+    // Đội ngũ Kỹ thuật viên
+    let TECHNICIANS = [
+      { id: 'KTV-01', name: 'Trần Đình Huy', role: 'Tổ Trưởng Tổ Máy & Điện Chẩn Đoán', activeCar: 2, finishedCount: 31, commission: 7200000, rating: '5.0 ★', status: 'Bận' },
+      { id: 'KTV-02', name: 'Lê Văn Hùng', role: 'Thợ Chính Gầm Bệ & Lái Vi Tính', activeCar: 2, finishedCount: 38, commission: 6850000, rating: '4.9 ★', status: 'Bận' },
+      { id: 'KTV-03', name: 'Nguyễn Văn Bình', role: 'Thợ Trưởng Đồng Sơn & Phục Hồi Vỏ', activeCar: 1, finishedCount: 22, commission: 5900000, rating: '4.8 ★', status: 'Bận' },
+      { id: 'KTV-04', name: 'Đỗ Quang Thắng', role: 'Thợ Điện Lạnh & Điều Hòa Ô Tô', activeCar: 0, finishedCount: 26, commission: 5200000, rating: '4.9 ★', status: 'Sẵn sàng' }
+    ];
+
+    // Sổ Nhật Ký Giao Dịch Tài Chính
+    let FINANCE_LEDGER = [
+      { id: 'TX-2026-881', roId: 'RO-2026-001', customer: 'Trần Minh Hoàng', type: 'Thu Tạm Ứng', method: 'Chuyển khoản VietQR', amount: 500000, time: '19/10 08:30', status: 'Thành công' },
+      { id: 'TX-2026-880', roId: 'RO-2026-002', customer: 'Lê Hoàng Long', type: 'Thu Tạm Ứng Phụ Tùng', method: 'Tiền mặt', amount: 1500000, time: '19/10 09:15', status: 'Thành công' },
+      { id: 'TX-2026-879', roId: 'RO-2026-004', customer: 'Vũ Quốc Thái', type: 'Thu Tạm Ứng', method: 'Cà thẻ POS', amount: 1000000, time: '18/10 14:00', status: 'Thành công' },
+      { id: 'TX-2026-878', roId: 'RO-2026-005', customer: 'Đặng Ngọc Tuấn', type: 'Thu Tạm Ứng', method: 'Chuyển khoản VietQR', amount: 1000000, time: '18/10 15:45', status: 'Thành công' }
+    ];
+
+    /* ----------------------------------------------------
+       B. STATUS HELPER & FORMATTER
+    ---------------------------------------------------- */
+    const STATUS_MAP = {
+      'QUOTING': { label: 'Báo Giá', color: 'bg-sky-500/10 text-sky-400 border-sky-500/30' },
+      'WAIT_PART': { label: 'Chờ Phụ Tùng', color: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
+      'REPAIRING': { label: 'Đang Sửa Chữa', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/30' },
+      'QC': { label: 'Kiểm Tra KCS', color: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+      'READY': { label: 'Sẵn Sàng Giao', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
+      'COMPLETED': { label: 'Đã Xuất Xưởng', color: 'bg-slate-700 text-slate-300 border-slate-600' }
+    };
+
+    function formatVND(amount) {
+      return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount).replace('₫', 'đ');
+    }
+
+    function calculateROTotal(ro) {
+      let partsTotal = 0;
+      let laborTotal = 0;
+      (ro.items || []).forEach(it => {
+        if (it.type === 'PART') partsTotal += (it.qty * it.price);
+        if (it.type === 'LABOR') laborTotal += (it.qty * it.price);
+      });
+      const subtotal = partsTotal + laborTotal;
+      const vat = Math.round(subtotal * (GARA_SETTINGS.vatRate / 100));
+      const grandTotal = subtotal + vat;
+      const remaining = Math.max(0, grandTotal - (ro.deposit || 0));
+      return { partsTotal, laborTotal, vat, grandTotal, remaining };
+    }
+
+    /* ----------------------------------------------------
+       C. NAVIGATION & ROLE MANAGEMENT
+    ---------------------------------------------------- */
+    function navigateTab(tabKey) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.remove('text-sky-400', 'bg-sky-950/50', 'border', 'border-sky-800/40');
+        btn.classList.add('text-slate-400');
+      });
+
+      const target = document.getElementById(`tab-${tabKey}`);
+      if (target) target.classList.remove('hidden');
+
+      const activeNav = document.getElementById(`nav-${tabKey}`);
+      if (activeNav) {
+        activeNav.classList.add('text-sky-400', 'bg-sky-950/50', 'border', 'border-sky-800/40');
+        activeNav.classList.remove('text-slate-400');
+      }
+
+      const titles = {
+        'dashboard': 'Tổng Quan Điều Hành Xưởng Dịch Vụ',
+        'repair-orders': 'Quản Lý Lệnh Sửa Chữa (Repair Orders)',
+        'kanban': 'Bảng Kanban Điều Phối Cầu Nâng & Tiến Độ',
+        'inventory': 'Quản Lý Kho Phụ Tùng & Vật Tư Tiêu Hao',
+        'customers': 'Quản Lý Hồ Sơ Khách Hàng & Xe (CRM)',
+        'technicians': 'Đội Ngũ Kỹ Thuật Viên & Năng Suất Hoa Hồng',
+        'finance': 'Kế Toán Thu Chi & Nhật Ký Thanh Toán',
+        'reports': 'Báo Cáo KPI & Doanh Số Dịch Vụ',
+        'settings': 'Cấu Hình Hệ Thống Gara'
+      };
+      document.getElementById('pageTitle').textContent = titles[tabKey] || 'GaraTech Enterprise';
+
+      // Re-render corresponding views
+      if (tabKey === 'dashboard') initDashboardCharts();
+      if (tabKey === 'repair-orders') renderROTable();
+      if (tabKey === 'kanban') renderKanbanBoard();
+      if (tabKey === 'inventory') renderPartsTable();
+      if (tabKey === 'customers') renderCustomersTable();
+      if (tabKey === 'technicians') renderTechniciansTable();
+      if (tabKey === 'finance') renderFinanceTable();
+    }
+
+    function switchRole(role) {
+      CURRENT_ROLE = role;
+      const roleMap = {
+        'advisor': 'Service Advisor (Cố vấn Dịch vụ)',
+        'foreman': 'Workshop Foreman (Quản đốc Xưởng)',
+        'accountant': 'Cashier (Kế toán & Thu ngân)',
+        'manager': 'General Manager (Giám đốc Điều hành)'
+      };
+      document.getElementById('userRoleBadge').textContent = roleMap[role];
+      showToast(`Đã chuyển góc nhìn làm việc: ${roleMap[role]}`);
+      renderROTable();
+      if (currentViewingRO) updateROWorkflowUI();
+    }
+
+    function toggleSidebar() {
+      const sb = document.getElementById('sidebar');
+      sb.classList.toggle('-translate-x-full');
+      sb.classList.toggle('absolute');
+    }
+
+    /* ----------------------------------------------------
+       D. DASHBOARD CHARTS & REFRESH LOGIC
+    ---------------------------------------------------- */
+    let annualChartInstance = null;
+    let pieChartInstance = null;
+
+    function initDashboardCharts() {
+      // Metrics update
+      const inGarage = REPAIR_ORDERS.filter(r => r.status !== 'COMPLETED').length;
+      document.getElementById('statCarsInGarage').textContent = `${inGarage} xe`;
+      document.getElementById('badgeActiveRO').textContent = inGarage;
+
+      const lowStockCount = INVENTORY.filter(i => i.stock <= i.minStock).length;
+      document.getElementById('statLowStockCount').textContent = `${lowStockCount} mặt hàng`;
+      document.getElementById('badgeLowStock').textContent = lowStockCount;
+
+      // 1. Annual Bar Chart (12 Months)
+      const ctxAnnual = document.getElementById('annualRevenueChart');
+      if (ctxAnnual) {
+        if (annualChartInstance) annualChartInstance.destroy();
+        annualChartInstance = new Chart(ctxAnnual, {
+          type: 'bar',
+          data: {
+            labels: ['T1', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'T8', 'T9', 'T10', 'T11 (DK)', 'T12 (DK)'],
+            datasets: [
+              {
+                label: 'Doanh Số Phụ Tùng',
+                data: [210, 195, 240, 280, 260, 310, 290, 340, 360, 395, 410, 480],
+                backgroundColor: '#0284c7',
+                borderRadius: 4
+              },
+              {
+                label: 'Tiền Công Dịch Vụ',
+                data: [130, 110, 145, 170, 160, 185, 175, 205, 220, 245, 255, 290],
+                backgroundColor: '#10b981',
+                borderRadius: 4
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: { labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } } }
+            },
+            scales: {
+              x: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } },
+              y: { grid: { color: '#1e293b' }, ticks: { color: '#94a3b8' } }
+            }
+          }
+        });
+      }
+
+      // 2. Revenue Pie Chart
+      const ctxPie = document.getElementById('revenuePieChart');
+      if (ctxPie) {
+        if (pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(ctxPie, {
+          type: 'doughnut',
+          data: {
+            labels: ['Phụ tùng chính hãng', 'Công thợ kỹ thuật', 'Chăm sóc xe & Detailing'],
+            datasets: [{
+              data: [54, 32, 14],
+              backgroundColor: ['#0284c7', '#10b981', '#f59e0b'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            cutout: '70%',
+            plugins: { legend: { display: false } }
+          }
+        });
+      }
+
+      renderDashboardTable();
+    }
+
+    function renderDashboardTable() {
+      const tbody = document.getElementById('dashUrgentTable');
+      const readyList = REPAIR_ORDERS.filter(r => r.status === 'READY' || r.status === 'QC');
+
+      if (readyList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-slate-500">Hiện tại không có xe chờ giao trong ngày.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = readyList.map(ro => {
+        const calc = calculateROTotal(ro);
+        const st = STATUS_MAP[ro.status];
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3 font-mono font-bold text-sky-400">${ro.id}</td>
+            <td class="p-3">
+              <span class="font-bold text-white font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-700">${ro.plate}</span>
+              <div class="text-[11px] text-slate-400 mt-0.5">${ro.carModel}</div>
+            </td>
+            <td class="p-3">
+              <div class="text-white">${ro.customerName}</div>
+              <div class="text-slate-400 font-mono text-[10px]">${ro.phone}</div>
+            </td>
+            <td class="p-3 text-slate-300">${ro.mechanic}</td>
+            <td class="p-3 max-w-xs truncate text-slate-400">${ro.symptoms}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border ${st.color}">${st.label}</span>
+            </td>
+            <td class="p-3 text-right font-mono font-bold text-emerald-400">${formatVND(calc.grandTotal)}</td>
+            <td class="p-3 text-center">
+              <button onclick="viewRODetail('${ro.id}')" class="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-semibold">
+                Xử Lý
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /* ----------------------------------------------------
+       E. REPAIR ORDER WORKFLOW & MODAL
+    ---------------------------------------------------- */
+    function filterRO(status) {
+      activeROFilter = status;
+      document.querySelectorAll('.ro-filter-btn').forEach(btn => {
+        btn.classList.remove('bg-sky-600', 'text-white', 'font-bold');
+        btn.classList.add('bg-slate-950', 'text-slate-300');
+      });
+      event.target.classList.add('bg-sky-600', 'text-white', 'font-bold');
+      event.target.classList.remove('bg-slate-950', 'text-slate-300');
+      renderROTable();
+    }
+
+    function renderROTable() {
+      const tbody = document.getElementById('mainROTableBody');
+      const search = (document.getElementById('roSearchInput')?.value || '').toLowerCase();
+
+      const filtered = REPAIR_ORDERS.filter(ro => {
+        const matchStatus = activeROFilter === 'ALL' || ro.status === activeROFilter;
+        const matchSearch = ro.plate.toLowerCase().includes(search) ||
+                            ro.customerName.toLowerCase().includes(search) ||
+                            ro.phone.includes(search) ||
+                            ro.id.toLowerCase().includes(search);
+        return matchStatus && matchSearch;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-8 text-slate-500">Không tìm thấy lệnh sửa chữa phù hợp.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(ro => {
+        const calc = calculateROTotal(ro);
+        const st = STATUS_MAP[ro.status];
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5 font-mono font-bold text-sky-400">
+              ${ro.id}
+              <div class="text-[10px] text-slate-500 font-sans">${ro.date}</div>
+            </td>
+            <td class="p-3.5">
+              <span class="font-mono font-bold text-white bg-slate-950 px-2 py-0.5 rounded border border-slate-700">${ro.plate}</span>
+              <div class="text-[11px] text-slate-400 mt-1">${ro.carModel}</div>
+            </td>
+            <td class="p-3.5">
+              <div class="font-bold text-white">${ro.customerName}</div>
+              <div class="text-slate-400 font-mono text-[11px]">${ro.phone}</div>
+            </td>
+            <td class="p-3.5">
+              <div class="text-slate-200">${ro.mechanic}</div>
+              <div class="text-[10px] text-slate-400">Tổ máy & gầm</div>
+            </td>
+            <td class="p-3.5 font-mono">
+              <div>${ro.odo.toLocaleString()} km</div>
+              <div class="text-[10px] text-amber-400 font-sans">Nhiên liệu: ${ro.fuel}</div>
+            </td>
+            <td class="p-3.5 text-center">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${st.color}">
+                <span class="w-1.5 h-1.5 rounded-full bg-current"></span>
+                ${st.label}
+              </span>
+            </td>
+            <td class="p-3.5 text-right font-mono text-amber-400 font-semibold">
+              ${formatVND(ro.deposit || 0)}
+            </td>
+            <td class="p-3.5 text-right font-mono font-bold text-emerald-400 text-sm">
+              ${formatVND(calc.grandTotal)}
+            </td>
+            <td class="p-3.5 text-center">
+              <button onclick="viewRODetail('${ro.id}')" class="px-3.5 py-1.5 bg-slate-950 hover:bg-sky-600 text-sky-400 hover:text-white rounded-xl text-xs font-bold border border-slate-700 hover:border-transparent transition-all">
+                Chi Tiết Báo Giá
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function viewRODetail(roId) {
+      const ro = REPAIR_ORDERS.find(r => r.id === roId);
+      if (!ro) return;
+      currentViewingRO = ro;
+
+      document.getElementById('roDetailCode').textContent = ro.id;
+      document.getElementById('roDetailPlateTitle').textContent = `${ro.plate} (${ro.carModel})`;
+      document.getElementById('roDetailCustMeta').textContent = `Khách: ${ro.customerName} | SĐT: ${ro.phone} | Ngày nhận: ${ro.date}`;
+      document.getElementById('roDetailOdo').textContent = `${ro.odo.toLocaleString()} km`;
+      document.getElementById('roDetailFuel').textContent = `${ro.fuel} Bình`;
+      document.getElementById('roDetailVin').textContent = ro.vin || 'Chưa cập nhật';
+      document.getElementById('roDetailMechanic').textContent = ro.mechanic;
+      document.getElementById('roDetailSymptoms').textContent = ro.symptoms;
+
+      updateROWorkflowUI();
+      renderROItemsTable();
+      openModal('modalRODetail');
+    }
+
+    function updateROWorkflowUI() {
+      if (!currentViewingRO) return;
+      const statuses = ['QUOTING', 'WAIT_PART', 'REPAIRING', 'QC', 'READY', 'COMPLETED'];
+      const container = document.getElementById('roStatusButtonsGroup');
+
+      container.innerHTML = statuses.map((stKey, index) => {
+        const item = STATUS_MAP[stKey];
+        const isCurrent = currentViewingRO.status === stKey;
+        const isPast = statuses.indexOf(currentViewingRO.status) > index;
+        
+        let styleClass = "bg-slate-950 text-slate-400 border border-slate-800";
+        if (isCurrent) {
+          styleClass = "bg-sky-600 text-white font-bold shadow-lg shadow-sky-600/30 border-sky-400";
+        } else if (isPast) {
+          styleClass = "bg-emerald-950/40 text-emerald-400 border-emerald-800/40";
+        }
+
+        return `
+          <button onclick="changeROStatus('${stKey}')" class="px-2.5 py-2 rounded-xl text-xs flex flex-col items-center justify-center transition-all ${styleClass}">
+            <span class="text-[9px] uppercase tracking-wider font-mono">${index + 1}. BƯỚC</span>
+            <span class="font-bold text-[11px]">${item.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    function changeROStatus(newStatus) {
+      if (!currentViewingRO) return;
+
+      if (CURRENT_ROLE === 'accountant' && newStatus !== 'COMPLETED') {
+        showToast("Kế toán chỉ thực hiện thu ngân và nghiệm thu xuất xưởng!", "warning");
+      }
+
+      currentViewingRO.status = newStatus;
+      updateROWorkflowUI();
+      renderROTable();
+      renderKanbanBoard();
+      initDashboardCharts();
+      showToast(`Lệnh [${currentViewingRO.id}] đã chuyển sang: ${STATUS_MAP[newStatus].label}`);
+    }
+
+    function renderROItemsTable() {
+      if (!currentViewingRO) return;
+      const tbody = document.getElementById('roItemsTableBody');
+      const calc = calculateROTotal(currentViewingRO);
+
+      tbody.innerHTML = (currentViewingRO.items || []).map((it, idx) => `
+        <tr class="hover:bg-slate-900/60">
+          <td class="p-2.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${it.type === 'PART' ? 'bg-sky-950 text-sky-400 border border-sky-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800'}">
+              ${it.type === 'PART' ? 'Phụ Tùng' : 'Tiền Công'}
+            </span>
+          </td>
+          <td class="p-2.5 font-bold text-white">${it.name}</td>
+          <td class="p-2.5 text-center font-mono">${it.qty}</td>
+          <td class="p-2.5 text-right font-mono">${formatVND(it.price)}</td>
+          <td class="p-2.5 text-right font-mono font-bold text-white">${formatVND(it.qty * it.price)}</td>
+          <td class="p-2.5 text-center">
+            <button onclick="removeROItem(${idx})" class="text-rose-400 hover:text-rose-300 p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+
+      document.getElementById('roSummaryParts').textContent = formatVND(calc.partsTotal);
+      document.getElementById('roSummaryLabor').textContent = formatVND(calc.laborTotal);
+      document.getElementById('roSummaryTax').textContent = formatVND(calc.vat);
+      document.getElementById('roSummaryDeposit').textContent = `- ${formatVND(currentViewingRO.deposit || 0)}`;
+      document.getElementById('roSummaryRemaining').textContent = formatVND(calc.remaining);
+    }
+
+    function removeROItem(index) {
+      if (!currentViewingRO) return;
+      currentViewingRO.items.splice(index, 1);
+      renderROItemsTable();
+      renderROTable();
+      initDashboardCharts();
+      showToast("Đã xóa hạng mục khỏi báo giá.");
+    }
+
+    function openAddItemModal() {
+      const sel = document.getElementById('addItemPartSelect');
+      sel.innerHTML = INVENTORY.map(p => `
+        <option value="${p.id}">${p.name} (Tồn: ${p.stock} ${p.unit}) - ${formatVND(p.sellPrice)}</option>
+      `).join('');
+      fillPartPrice(sel.value);
+      openModal('modalAddItem');
+    }
+
+    function toggleItemTypeSelection(type) {
+      if (type === 'PART') {
+        document.getElementById('selectFromPartGroup').classList.remove('hidden');
+        document.getElementById('customNameGroup').classList.add('hidden');
+        fillPartPrice(document.getElementById('addItemPartSelect').value);
+      } else {
+        document.getElementById('selectFromPartGroup').classList.add('hidden');
+        document.getElementById('customNameGroup').classList.remove('hidden');
+        document.getElementById('addItemPrice').value = 350000;
+      }
+    }
+
+    function fillPartPrice(partId) {
+      const p = INVENTORY.find(x => x.id == partId);
+      if (p) document.getElementById('addItemPrice').value = p.sellPrice;
+    }
+
+    function handleAddItemToRO(e) {
+      e.preventDefault();
+      if (!currentViewingRO) return;
+
+      const type = document.getElementById('addItemType').value;
+      const qty = parseInt(document.getElementById('addItemQty').value) || 1;
+      const price = parseInt(document.getElementById('addItemPrice').value) || 0;
+      let name = '';
+
+      if (type === 'PART') {
+        const partId = document.getElementById('addItemPartSelect').value;
+        const partObj = INVENTORY.find(x => x.id == partId);
+        if (partObj) {
+          name = partObj.name;
+          partObj.stock -= qty; // Cập nhật kho
+        }
+      } else {
+        name = document.getElementById('addItemCustomName').value || 'Công dịch vụ kỹ thuật xưởng';
+      }
+
+      currentViewingRO.items.push({ type, name, qty, price });
+      renderROItemsTable();
+      renderROTable();
+      renderPartsTable();
+      initDashboardCharts();
+      closeModal('modalAddItem');
+      showToast("Đã thêm hạng mục mới vào lệnh sửa chữa!");
+    }
+
+    function openNewROModal() {
+      openModal('modalNewRO');
+    }
+
+    function handleCreateRO(e) {
+      e.preventDefault();
+      const code = `RO-2026-00${REPAIR_ORDERS.length + 1}`;
+      const newRo = {
+        id: code,
+        customerName: document.getElementById('newRoCustName').value,
+        phone: document.getElementById('newRoCustPhone').value,
+        plate: document.getElementById('newRoPlate').value.toUpperCase(),
+        carModel: document.getElementById('newRoCarModel').value,
+        vin: document.getElementById('newRoVin').value.toUpperCase(),
+        odo: parseInt(document.getElementById('newRoOdo').value) || 0,
+        fuel: document.getElementById('newRoFuel').value,
+        mechanic: document.getElementById('newRoMechanic').value,
+        status: 'QUOTING',
+        symptoms: document.getElementById('newRoSymptoms').value,
+        deposit: 0,
+        date: '19/10/2026',
+        items: [
+          { type: 'LABOR', name: 'Công kiểm tra chẩn đoán lỗi & báo giá tổng thể', qty: 1, price: 150000 }
+        ]
+      };
+
+      REPAIR_ORDERS.unshift(newRo);
+      closeModal('modalNewRO');
+      renderROTable();
+      renderKanbanBoard();
+      initDashboardCharts();
+      showToast(`Đã tiếp nhận xe thành công! Mã lệnh: ${code}`);
+      viewRODetail(code);
+    }
+
+    /* ----------------------------------------------------
+       F. KANBAN BOARD CONTROLLER
+    ---------------------------------------------------- */
+    function renderKanbanBoard() {
+      const cols = ['QUOTING', 'WAIT_PART', 'REPAIRING', 'QC', 'READY'];
+      
+      cols.forEach(colKey => {
+        const container = document.getElementById(`kanbanCol-${colKey}`);
+        const countBadge = document.getElementById(`kanbanCount-${colKey}`);
+        const list = REPAIR_ORDERS.filter(r => r.status === colKey);
+
+        if (countBadge) countBadge.textContent = list.length;
+        if (!container) return;
+
+        if (list.length === 0) {
+          container.innerHTML = `<div class="text-[11px] text-slate-600 text-center py-8 italic border border-dashed border-slate-800 rounded-xl">Chưa có xe</div>`;
+          return;
+        }
+
+        container.innerHTML = list.map(ro => {
+          const calc = calculateROTotal(ro);
+          return `
+            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 hover:border-sky-500/50 transition-all shadow-md">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="font-mono text-sky-400 font-bold text-xs">${ro.id}</span>
+                <span class="text-[10px] text-slate-500">${ro.date}</span>
+              </div>
+              <div class="font-bold text-white text-xs">${ro.plate}</div>
+              <div class="text-[11px] text-slate-400">${ro.carModel}</div>
+              <div class="mt-2 pt-2 border-t border-slate-900 flex justify-between items-center text-[11px]">
+                <span class="text-slate-400"><i class="fa-solid fa-user-gear mr-1 text-slate-500"></i>${ro.mechanic.split(' ').slice(-1)}</span>
+                <span class="font-mono font-bold text-emerald-400">${formatVND(calc.grandTotal)}</span>
+              </div>
+              <div class="mt-2.5 flex gap-1.5">
+                <button onclick="viewRODetail('${ro.id}')" class="w-full py-1 bg-slate-900 hover:bg-sky-600 text-slate-300 hover:text-white rounded-lg text-[10px] font-bold border border-slate-700">
+                  Chi Tiết
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      });
+    }
+
+    /* ----------------------------------------------------
+       G. INVENTORY MANAGEMENT
+    ---------------------------------------------------- */
+    function filterPartCategory(cat) {
+      activePartCatFilter = cat;
+      document.querySelectorAll('.part-cat-btn').forEach(btn => {
+        btn.classList.remove('bg-sky-600', 'text-white', 'font-bold');
+        btn.classList.add('bg-slate-950', 'text-slate-300');
+      });
+      event.target.classList.add('bg-sky-600', 'text-white', 'font-bold');
+      event.target.classList.remove('bg-slate-950', 'text-slate-300');
+      renderPartsTable();
+    }
+
+    function renderPartsTable() {
+      const tbody = document.getElementById('partsTableBody');
+      const search = (document.getElementById('partSearchInput')?.value || '').toLowerCase();
+
+      const filtered = INVENTORY.filter(p => {
+        let matchCat = true;
+        if (activePartCatFilter === 'LOW_STOCK') {
+          matchCat = p.stock <= p.minStock;
+        } else if (activePartCatFilter !== 'ALL') {
+          matchCat = p.category === activePartCatFilter;
+        }
+        const matchSearch = p.name.toLowerCase().includes(search) || p.sku.toLowerCase().includes(search);
+        return matchCat && matchSearch;
+      });
+
+      tbody.innerHTML = filtered.map(p => {
+        const isLow = p.stock <= p.minStock;
+        return `
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5 font-mono font-bold text-sky-400">${p.sku}</td>
+            <td class="p-3.5 font-bold text-white">${p.name}</td>
+            <td class="p-3.5 text-slate-300"><span class="bg-slate-950 px-2 py-0.5 rounded text-[10px]">${p.category}</span></td>
+            <td class="p-3.5 text-slate-300">${p.unit}</td>
+            <td class="p-3.5 text-center font-mono font-bold text-sm ${isLow ? 'text-rose-400' : 'text-emerald-400'}">
+              ${p.stock}
+            </td>
+            <td class="p-3.5 text-right font-mono text-slate-400">${formatVND(p.buyPrice)}</td>
+            <td class="p-3.5 text-right font-mono font-bold text-white">${formatVND(p.sellPrice)}</td>
+            <td class="p-3.5 text-center">
+              ${isLow 
+                ? '<span class="px-2 py-0.5 bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-full text-[10px] font-bold">Sắp hết hàng</span>' 
+                : '<span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] font-bold">Đầy đủ</span>'
+              }
+            </td>
+            <td class="p-3.5 text-center">
+              <button onclick="quickAddStock(${p.id}, 5)" class="px-2.5 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs font-semibold rounded-lg text-sky-400">
+                + Nhập 5
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function quickAddStock(partId, qty) {
+      const part = INVENTORY.find(x => x.id === partId);
+      if (part) {
+        part.stock += qty;
+        renderPartsTable();
+        initDashboardCharts();
+        showToast(`Đã nhập kho +${qty} ${part.unit} cho [${part.sku}]`);
+      }
+    }
+
+    function openNewPartModal() {
+      openModal('modalNewPart');
+    }
+
+    function handleCreatePart(e) {
+      e.preventDefault();
+      const newPart = {
+        id: INVENTORY.length + 1,
+        sku: document.getElementById('newPartSku').value.toUpperCase(),
+        name: document.getElementById('newPartName').value,
+        category: document.getElementById('newPartCategory').value,
+        unit: document.getElementById('newPartUnit').value,
+        stock: parseInt(document.getElementById('newPartStock').value) || 0,
+        minStock: 4,
+        buyPrice: parseInt(document.getElementById('newPartBuyPrice').value) || 0,
+        sellPrice: parseInt(document.getElementById('newPartSellPrice').value) || 0,
+      };
+
+      INVENTORY.unshift(newPart);
+      closeModal('modalNewPart');
+      renderPartsTable();
+      initDashboardCharts();
+      showToast(`Đã thêm mã hàng [${newPart.sku}] vào kho phụ tùng!`);
+    }
+
+    /* ----------------------------------------------------
+       H. CRM KHÁCH HÀNG & XE
+    ---------------------------------------------------- */
+    function renderCustomersTable() {
+      const tbody = document.getElementById('customerTableBody');
+      const search = (document.getElementById('customerSearchInput')?.value || '').toLowerCase();
+
+      // Aggregate customers from REPAIR_ORDERS
+      const customersMap = {};
+      REPAIR_ORDERS.forEach(ro => {
+        if (!customersMap[ro.phone]) {
+          customersMap[ro.phone] = {
+            name: ro.customerName,
+            phone: ro.phone,
+            plate: ro.plate,
+            carModel: ro.carModel,
+            vin: ro.vin || 'N/A',
+            visitCount: 0,
+            totalSpent: 0,
+            nextVisit: '19/12/2026'
+          };
+        }
+        customersMap[ro.phone].visitCount += 1;
+        customersMap[ro.phone].totalSpent += calculateROTotal(ro).grandTotal;
+      });
+
+      const list = Object.values(customersMap).filter(c => 
+        c.name.toLowerCase().includes(search) || 
+        c.phone.includes(search) || 
+        c.plate.toLowerCase().includes(search) ||
+        c.vin.toLowerCase().includes(search)
+      );
+
+      tbody.innerHTML = list.map(c => `
+        <tr class="hover:bg-slate-800/40 transition-colors">
+          <td class="p-3.5 font-bold text-white">${c.name}</td>
+          <td class="p-3.5 font-mono text-sky-400">${c.phone}</td>
+          <td class="p-3.5 font-mono font-bold text-slate-200">
+            <span class="bg-slate-950 border border-slate-700 px-2 py-0.5 rounded">${c.plate}</span>
+          </td>
+          <td class="p-3.5 text-slate-300">${c.carModel}</td>
+          <td class="p-3.5 font-mono text-slate-400">${c.vin}</td>
+          <td class="p-3.5 text-center font-mono font-bold">${c.visitCount} lượt</td>
+          <td class="p-3.5 text-right font-mono font-bold text-emerald-400">${formatVND(c.totalSpent)}</td>
+          <td class="p-3.5 text-center text-amber-400 font-medium">${c.nextVisit}</td>
+          <td class="p-3.5 text-center">
+            <button onclick="showToast('Đang mở toàn bộ hồ sơ lịch sử xe ${c.plate}')" class="px-3 py-1 bg-slate-950 hover:bg-slate-800 border border-slate-700 text-slate-300 rounded-lg text-xs font-semibold">
+              Xem Nhật Ký
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ----------------------------------------------------
+       I. TECHNICIANS & COMMISSIONS
+    ---------------------------------------------------- */
+    function renderTechniciansTable() {
+      const tbody = document.getElementById('technicianTableBody');
+      tbody.innerHTML = TECHNICIANS.map(t => `
+        <tr class="hover:bg-slate-800/40 transition-colors">
+          <td class="p-3 font-mono font-bold text-sky-400">${t.id}</td>
+          <td class="p-3 font-bold text-white">${t.name}</td>
+          <td class="p-3 text-slate-300">${t.role}</td>
+          <td class="p-3 text-center font-mono font-bold">${t.activeCar} xe</td>
+          <td class="p-3 text-center font-mono font-bold text-white">${t.finishedCount}</td>
+          <td class="p-3 text-right font-mono font-bold text-emerald-400">${formatVND(t.commission)}</td>
+          <td class="p-3 text-center"><span class="px-2 py-0.5 bg-amber-500/20 text-amber-400 rounded-full font-bold text-[10px]">${t.rating}</span></td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status === 'Bận' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
+              ${t.status}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ----------------------------------------------------
+       J. FINANCE & LEDGER TABLE
+    ---------------------------------------------------- */
+    function renderFinanceTable() {
+      const tbody = document.getElementById('financeLedgerTable');
+      tbody.innerHTML = FINANCE_LEDGER.map(tx => `
+        <tr class="hover:bg-slate-800/40 transition-colors">
+          <td class="p-3 font-mono text-sky-400 font-bold">${tx.id}</td>
+          <td class="p-3 font-mono text-slate-300">${tx.roId}</td>
+          <td class="p-3 font-semibold text-white">${tx.customer}</td>
+          <td class="p-3 text-slate-400">${tx.method}</td>
+          <td class="p-3 text-slate-300">${tx.type}</td>
+          <td class="p-3 text-right font-mono font-bold text-emerald-400">+ ${formatVND(tx.amount)}</td>
+          <td class="p-3 text-center text-slate-400">${tx.time}</td>
+          <td class="p-3 text-center">
+            <span class="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded text-[10px] font-bold">
+              ${tx.status}
+            </span>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    /* ----------------------------------------------------
+       K. PRINT INVOICE GENERATOR
+    ---------------------------------------------------- */
+    function printCurrentRO() {
+      if (!currentViewingRO) return;
+      const calc = calculateROTotal(currentViewingRO);
+
+      document.getElementById('printGaraNameHeader').textContent = GARA_SETTINGS.name;
+      document.getElementById('printGaraAddressHeader').textContent = `Địa chỉ: ${GARA_SETTINGS.address}`;
+      document.getElementById('printGaraPhoneHeader').textContent = GARA_SETTINGS.phone;
+
+      document.getElementById('printInvoiceCode').textContent = `MÃ RO: ${currentViewingRO.id}`;
+      document.getElementById('printInvoiceDate').textContent = `Ngày lập: ${currentViewingRO.date}`;
+      document.getElementById('printCustName').textContent = currentViewingRO.customerName;
+      document.getElementById('printCustPhone').textContent = currentViewingRO.phone;
+      document.getElementById('printPlate').textContent = currentViewingRO.plate;
+      document.getElementById('printCarModel').textContent = currentViewingRO.carModel;
+      document.getElementById('printOdo').textContent = `${currentViewingRO.odo.toLocaleString()} km`;
+      document.getElementById('printFuel').textContent = `${currentViewingRO.fuel} bình`;
+
+      const tbody = document.getElementById('printInvoiceTableBody');
+      tbody.innerHTML = (currentViewingRO.items || []).map((it, idx) => `
+        <tr>
+          <td class="border border-black p-2 text-center">${idx + 1}</td>
+          <td class="border border-black p-2 font-medium">${it.name}</td>
+          <td class="border border-black p-2 text-center">${it.type === 'PART' ? 'Vật tư' : 'Công thợ'}</td>
+          <td class="border border-black p-2 text-center font-mono">${it.qty}</td>
+          <td class="border border-black p-2 text-right font-mono">${formatVND(it.price)}</td>
+          <td class="border border-black p-2 text-right font-mono font-bold">${formatVND(it.qty * it.price)}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('printSumParts').textContent = formatVND(calc.partsTotal);
+      document.getElementById('printSumLabor').textContent = formatVND(calc.laborTotal);
+      document.getElementById('printSumVat').textContent = formatVND(calc.vat);
+      document.getElementById('printSumDeposit').textContent = `- ${formatVND(currentViewingRO.deposit || 0)}`;
+      document.getElementById('printSumGrand').textContent = formatVND(calc.remaining);
+
+      // Gọi lệnh in bản địa của trình duyệt
+      window.print();
+    }
+
+    /* ----------------------------------------------------
+       L. SETTINGS HANDLER
+    ---------------------------------------------------- */
+    function handleSaveSettings(e) {
+      e.preventDefault();
+      GARA_SETTINGS.name = document.getElementById('settingGaraName').value;
+      GARA_SETTINGS.phone = document.getElementById('settingGaraPhone').value;
+      GARA_SETTINGS.address = document.getElementById('settingGaraAddress').value;
+      GARA_SETTINGS.taxCode = document.getElementById('settingGaraTax').value;
+      GARA_SETTINGS.vatRate = parseInt(document.getElementById('settingGaraVatRate').value) || 8;
+      GARA_SETTINGS.bank = document.getElementById('settingGaraBank').value;
+
+      showToast("Đã lưu thành công cấu hình thông tin Gara!");
+    }
+
+    /* ----------------------------------------------------
+       M. GENERAL MODAL & TOAST UTILS
+    ---------------------------------------------------- */
+    function openModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('hidden');
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    let toastTimer;
+    function showToast(msg, type = "success") {
+      const toast = document.getElementById('toast');
+      const text = document.getElementById('toastMsg');
+      const icon = document.getElementById('toastIcon');
+
+      text.textContent = msg;
+      if (type === "warning") {
+        icon.className = "fa-solid fa-triangle-exclamation text-amber-400 text-base";
+      } else {
+        icon.className = "fa-solid fa-circle-check text-sky-400 text-base";
+      }
+
+      toast.classList.remove('translate-y-24', 'opacity-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        toast.classList.add('translate-y-24', 'opacity-0');
+      }, 3500);
+    }
+
+    // Tự động khởi tạo khi tải xong DOM
+    window.addEventListener('DOMContentLoaded', () => {
+      initDashboardCharts();
+      renderROTable();
+      renderKanbanBoard();
+      renderPartsTable();
+      renderCustomersTable();
+      renderTechniciansTable();
+      renderFinanceTable();
+    });
+  </script>
+</body>
+</html>
